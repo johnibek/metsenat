@@ -31,7 +31,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['metsenat.herokuapp.com']
+ALLOWED_HOSTS = [
+    'metsenat-1ab47b95a145.herokuapp.com',  # Your Heroku app domain
+    'localhost',  # For local development
+    '127.0.0.1',
+]
 
 
 # Application definition
