@@ -2,8 +2,3 @@ venv/
 .env
 __pycache__/
 .idea/
-
-migrations/*
-
-main/migrations/0001_initial.py
-shared/migrations/0001_initial.py
