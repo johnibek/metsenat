@@ -1,0 +1,1 @@
+web: gunicorn metsenat.wsgi:application
