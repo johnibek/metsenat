@@ -11,7 +11,13 @@ class SponsorApplicationAPIView(APIView):
 
     @extend_schema(
         request=SponsorApplicationSerializer,
-        tags=["sponsors"]
+        tags=["sponsors"],
+        description="""
+        Apply for becoming sponsor.
+        Choice fields needed for application:
+        Sponsor types -> individual, legal_entity  # Jismoniy shaxs, Yuridik shaxs
+        Payment methods -> cash, debit_card, bank_transfer  # Naqt, karta, bank orqali
+        """
     )
     def post(self, request):
         serializer = SponsorApplicationSerializer(data=request.data, many=False)

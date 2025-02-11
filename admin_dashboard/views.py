@@ -90,6 +90,13 @@ class SponsorDetailUpdateAPIView(APIView):
 
     @extend_schema(
         request=SponsorSerializer,
+        description="""
+            Update sponsor data using one's id.
+            Choice fields when updating sponsor data:
+            Sponsor types -> individual, legal_entity  # Jismoniy shaxs, Yuridik shaxs
+            Payment methods -> cash, debit_card, bank_transfer  # Naqt, karta, bank orqali
+            Sponsor application status -> new, in_progress, verified, cancelled  # Yangi, Jarayonda, Tasdiqlandi, Rad etildi
+        """,
         tags=['sponsors']
     )
     def put(self, request, id):
@@ -101,7 +108,14 @@ class SponsorDetailUpdateAPIView(APIView):
 
     @extend_schema(
         request=SponsorSerializer,
-        tags=['sponsors']
+        tags=['sponsors'],
+        description="""
+                Update sponsor data using one's id.
+                Choice fields when updating sponsor data:
+                Sponsor types -> individual, legal_entity  # Jismoniy shaxs, Yuridik shaxs
+                Payment methods -> cash, debit_card, bank_transfer  # Naqt, karta, bank orqali
+                Sponsor application status -> new, in_progress, verified, cancelled  # Yangi, Jarayonda, Tasdiqlandi, Rad etildi
+            """
     )
     def patch(self, request, id):
         sponsor = self.get_sponsor(id)
@@ -156,7 +170,12 @@ class StudentListCreateAPIView(APIView):
 
     @extend_schema(
         request=StudentSerializer,
-        tags=['students']
+        tags=['students'],
+        description="""
+            Create new student.
+            Choice fields needed when creating new student:
+            Student degrees -> bachelor, master  # Bakalavr, Magistr
+        """
     )
     def post(self, request):
         serializer = StudentSerializer(data=request.data, many=False)
@@ -187,7 +206,12 @@ class StudentDetailUpdateDeleteAPIView(APIView):
 
     @extend_schema(
         request=StudentSerializer,
-        tags=['students']
+        tags=['students'],
+        description="""
+                Update student data using one's id.
+                Choice fields needed when updating the student data:
+                Student degrees -> bachelor, master  # Bakalavr, Magistr
+            """
     )
     def put(self, request, id):
         student = self.get_student(id)
@@ -198,7 +222,12 @@ class StudentDetailUpdateDeleteAPIView(APIView):
 
     @extend_schema(
         request=StudentSerializer,
-        tags=['students']
+        tags=['students'],
+        description="""
+                    Update student data using one's id.
+                    Choice fields needed when updating the student data:
+                    Student degrees -> bachelor, master  # Bakalavr, Magistr
+                """
     )
     def patch(self, request, id):
         student = self.get_student(id)
