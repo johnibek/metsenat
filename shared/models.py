@@ -7,3 +7,5 @@ class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        abstract = True  # It means this model is aimed for inheritance and will not be saved in database.
