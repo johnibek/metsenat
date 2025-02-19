@@ -9,10 +9,10 @@ from shared.utils import token
 
 class SignUpStaffUserSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
-    password = serializers.CharField(required=True, max_length=128, write_only=True)
-    confirm_password = serializers.CharField(required=True, max_length=128, write_only=True)
     username = serializers.CharField(required=True, max_length=128)
     email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, max_length=128, write_only=True)
+    confirm_password = serializers.CharField(required=True, max_length=128, write_only=True)
 
     def validate(self, attrs):
         password = attrs.get('password')

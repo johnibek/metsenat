@@ -3,109 +3,111 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .permissions import IsSuperUser
+from shared.permissions import IsStaffUser, IsSuperUser
 from .serializers import (SignUpStaffUserSerializer, LogoutStaffUserSerializer, ChangeStaffUserDataSerializer,
                           ViewStaffUserDataSerializer, ChangePasswordSerializer)
 
 
-
-class SignUpStaffUserAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsSuperUser]  # Only superusers can create new staff users.
-
-    @extend_schema(
+@extend_schema(
         request=SignUpStaffUserSerializer,
-        tags=['staff users authentication']
+        tags=['staff users authentication'],
+        description="""
+        Sign up staff users. Only superusers can do this action.
+        """
     )
-    def post(self, request):
-        serializer = SignUpStaffUserSerializer(data=request.data, many=False)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+class SignUpStaffUserAPIView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated, IsSuperUser]  # Only superusers can create new staff users.
+    serializer_class = SignUpStaffUserSerializer
 
 
-class LogoutStaffUserAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
+@extend_schema(
         request=LogoutStaffUserSerializer,
         tags=['staff users authentication']
-    )
-    def post(self, request):
-        serializer = LogoutStaffUserSerializer(data=request.data)
+)
+class LogoutStaffUserAPIView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated, IsStaffUser]
+    serializer_class = LogoutStaffUserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:
-            refresh = serializer.validated_data.get('refresh_token')
-            refresh_token = RefreshToken(refresh)
-            refresh_token.blacklist()
+            refresh_token = serializer.validated_data.get('refresh_token')
+            refresh = RefreshToken(refresh_token)
+            refresh.blacklist()
             return Response(
                 {
-                    "success": True,
-                    "message": 'You have successfully logged out.'
-                },
-                status=status.HTTP_200_OK
+                    'success': True,
+                    'message': 'You have successfully logged out'
+                }, status=status.HTTP_200_OK
+            )
+        except TokenError:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Token is incorrect or expired.'
+                }, status=status.HTTP_400_BAD_REQUEST
             )
 
-        except TokenError:
-            return Response({"message": "Token is incorrect or expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ViewStaffUserDataAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
+@extend_schema(
         request=ViewStaffUserDataSerializer,
-        tags=['staff users authentication']
+        tags=['staff users authentication'],
+        description="""
+        Profile data. You can only see your own data.
+        """
     )
-    def get(self, request):
-        serializer = ViewStaffUserDataSerializer(instance=request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class ViewStaffUserDataAPIView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated, IsStaffUser]
+    serializer_class = ViewStaffUserDataSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
-class ChangeStaffUserDataAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+@extend_schema(
+        request=ChangeStaffUserDataSerializer,
+        tags=['staff users authentication'],
+        description="""
+        Update profile data. You can only update your first name, last name, email
+        """
+    )
+class ChangeStaffUserDataAPIView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsStaffUser]
+    serializer_class = ChangeStaffUserDataSerializer
     http_method_names = ['patch', 'put']
 
-    @extend_schema(
-        request=ChangeStaffUserDataSerializer,
-        tags=['staff users authentication']
-    )
-    def put(self, request):
-        serializer = ChangeStaffUserDataSerializer(instance=request.user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"success": True, "message": "Successfully changed user data."}, status=status.HTTP_200_OK)
-
-    @extend_schema(
-        request=ChangeStaffUserDataSerializer,
-        tags=['staff users authentication']
-    )
-    def patch(self, request):
-        serializer = ChangeStaffUserDataSerializer(instance=request.user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"success": True, "message": "Successfully changed user data."}, status=status.HTTP_200_OK)
+    def get_object(self):
+        return self.request.user
 
 
-class ChangePasswordAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
+@extend_schema(
         request=ChangePasswordSerializer,
-        tags=['staff users authentication']
+        tags=['staff users authentication'],
+        description="""
+        Change staff user password.
+        """
     )
-    def put(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
+class ChangePasswordAPIView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsStaffUser]
+    serializer_class = ChangePasswordSerializer
+    http_method_names = ['put']
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        old_password = serializer.validated_data['old_password']
-        new_password = serializer.validated_data['new_password']
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password')
+
         if not user.check_password(old_password):
             return Response(
                 {"error": "Your old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST
